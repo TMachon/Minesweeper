@@ -2,7 +2,7 @@
 
 class TerminalDisplay:
     
-    def output(self, tableForBombs, tableForClicsk):
+    def output(self, tableForBombs, tableForClicks):
 
         height = len(tableForBombs)
         width = len(tableForBombs[0])
@@ -16,7 +16,6 @@ class TerminalDisplay:
         for i in range(width):
             endLine += "┴───"
         endLine += "┘"
-
 
 
         line = "   "
@@ -33,12 +32,17 @@ class TerminalDisplay:
             head = " "+str(j+1) if len(str(j+1))==1 else str(j+1)
             line = head+"│"
             for i in range(width):
-                val = "•" if tableForBombs[j][i]>=9 else str(tableForBombs[j][i])
+                if (tableForClicks[j][i]):
+                    val = "•" if tableForBombs[j][i]>=9 else str(tableForBombs[j][i])
+                else:
+                    val = "□"
                 line += " "+val+" │"
 
             print(line)
         
         print(endLine)
+
+
 
     def input(self, message):
         return input(message)

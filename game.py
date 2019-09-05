@@ -16,6 +16,7 @@ class Minesweeper:
         self.viewTable = [] #bool 2D table with discovered cases
         
 
+
     def __settings(self):
 
         ## Set difficulty level
@@ -48,7 +49,7 @@ class Minesweeper:
                     bombLine.append(9)
                 else:
                     bombLine.append(0)
-                viewLine.append(True)
+                viewLine.append(False)
             self.bombTable.append(bombLine)
             self.viewTable.append(viewLine)
 

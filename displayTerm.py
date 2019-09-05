@@ -1,3 +1,5 @@
+# coding: utf-8
+
 class TerminalDisplay:
     
     def output(self, tableForBombs, tableForClicsk):
@@ -38,5 +40,5 @@ class TerminalDisplay:
         
         print(endLine)
 
-    def input(self, message: str) -> str:
+    def input(self, message):
         return input(message)

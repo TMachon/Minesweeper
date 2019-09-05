@@ -1,3 +1,4 @@
+# coding: utf-8
 import displayTerm
 import random
 
@@ -37,9 +38,8 @@ class Minesweeper:
         bombsPos = random.sample(range(self.width*self.height), self.nbBombs)
         print(bombsPos)
 
-        ## Set tables
+        ## Initialize tables and bombs
 
-        #TODO gere les bords
         for i in range(self.height):
             bombLine = []
             viewLine = []
@@ -52,24 +52,73 @@ class Minesweeper:
             self.bombTable.append(bombLine)
             self.viewTable.append(viewLine)
 
-        for i in range(self.height):
-            for j in range(self.width):
+        ## Place numbers
+
+        #corners
+        if (self.bombTable[0][0] >=9):
+            self.bombTable[0][1] += 1
+            self.bombTable[1][0] += 1
+            self.bombTable[1][1] += 1
+        if (self.bombTable[0][self.width-1] >= 9):
+            self.bombTable[0][self.width-2] += 1
+            self.bombTable[1][self.width-2] += 1
+            self.bombTable[1][self.width-1] += 1
+        if (self.bombTable[self.height-1][0] >= 9):
+            self.bombTable[self.height-2][0] += 1
+            self.bombTable[self.height-2][1] += 1
+            self.bombTable[self.height-1][1] += 1
+        if (self.bombTable[self.height-1][self.width-1] >= 9):
+            self.bombTable[self.height-2][self.width-2] += 1
+            self.bombTable[self.height-2][self.width-1] += 1
+            self.bombTable[self.height-1][self.width-2] += 1
+
+        #edges
+        for i in range(1, self.width-1):
+            if (self.bombTable[0][i] >= 9):
+                self.bombTable[0][i-1] += 1
+                self.bombTable[0][i+1] += 1
+                self.bombTable[1][i-1] += 1
+                self.bombTable[1][i] += 1
+                self.bombTable[1][i+1] += 1
+            if (self.bombTable[self.height-1][i] >= 9):
+                self.bombTable[self.height-2][i-1] += 1
+                self.bombTable[self.height-2][i] += 1
+                self.bombTable[self.height-2][i+1] += 1
+                self.bombTable[self.height-1][i-1] += 1
+                self.bombTable[self.height-1][i+1] += 1
+        
+        for i in range(1, self.height-1):
+            if (self.bombTable[i][0] >= 9):
+                self.bombTable[i-1][0] += 1
+                self.bombTable[i-1][1] += 1
+                self.bombTable[i][1] += 1
+                self.bombTable[i+1][0] += 1
+                self.bombTable[i+1][1] += 1
+            if (self.bombTable[i][self.width-1] >= 9):
+                self.bombTable[i-1][self.width-2] += 1
+                self.bombTable[i-1][self.width-1] += 1
+                self.bombTable[i][self.width-2] += 1
+                self.bombTable[i+1][self.width-2] += 1
+                self.bombTable[i+1][self.width-1] += 1
+
+        #center
+        for i in range(1, self.height-1):
+            for j in range(1, self.width-1):
                 if (self.bombTable[i][j] >= 9):
-                    try:
-                        self.bombTable[i-1][j-1] +=1
-                        self.bombTable[i-1][j] +=1
-                        self.bombTable[i-1][j+1] +=1
-                        self.bombTable[i][j-1] +=1
-                        self.bombTable[i][j+1] +=1
-                        self.bombTable[i+1][j-1] +=1
-                        self.bombTable[i+1][j] +=1
-                        self.bombTable[i+1][j+1] +=1
-                    except:
-                        print("err lol")
+                    self.bombTable[i-1][j-1] += 1
+                    self.bombTable[i-1][j] += 1
+                    self.bombTable[i-1][j+1] += 1
+                    self.bombTable[i][j-1] += 1
+                    self.bombTable[i][j+1] += 1
+                    self.bombTable[i+1][j-1] += 1
+                    self.bombTable[i+1][j] += 1
+                    self.bombTable[i+1][j+1] += 1
+
 
 
     def __start(self):
         self.display.output(self.bombTable, self.viewTable)
+
 
     def game(self):
         self.__settings()

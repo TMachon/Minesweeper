@@ -1,6 +1,6 @@
 # coding: utf-8
 import displayTerm
-import random
+import random, re
 
 class Minesweeper:
 
@@ -12,23 +12,22 @@ class Minesweeper:
         self.width = 0
         self.height = 0
         self.nbBombs = 0
+        self.nbDiscovered = 0
         self.bombTable = [] #int 2D table with bomb postions (maked as 9) and case value (0-8)
-        self.viewTable = [] #bool 2D table with discovered cases
-        
+        self.viewTable = [] #bool 2D table with discovered cases (True=discovered, False=hidden)
 
-
-    def __settings(self):
+    def _settings(self):
 
         ## Set difficulty level
         while not (1<=self.diff<=3) :
             self.diff = int(self.display.input("Select difficulty (1, 2, 3): "))
 
         ## Set dimensions
-        while not (5<=self.width<=99) :
-            self.width = int(self.display.input("Select width (between 5 and 99): "))
-
         while not (5<=self.height<=99) :
             self.height = int(self.display.input("Select height (between 5 and 99): "))
+
+        while not (5<=self.width<=99) :
+            self.width = int(self.display.input("Select width (between 5 and 99): "))
 
         ## Generate bombs
         if (self.diff == 1): self.nbBombs = int(self.width*self.height/5)
@@ -115,12 +114,57 @@ class Minesweeper:
                     self.bombTable[i+1][j] += 1
                     self.bombTable[i+1][j+1] += 1
 
+    def discover(self, pos):
+        tmp = pos.split(':')
+        x = int(tmp[0])-1
+        y = int(tmp[1])-1
 
+        if (x >= self.width or x < 0):
+            print("NO")
+        if (y >= self.height or y < 0):
+            print("NONO")
 
-    def __start(self):
+        if (self.bombTable[y-1][x] == 9):
+            self.gameLost()
+        else:
+            self._discoverRecursive(x, y)
+
+    def _discoverRecursive(self, x, y):
+        # Reminder:
+        #  self.bombTable = [] #int 2D table with bomb postions (maked as 9) and case value (0-8)
+        #  self.viewTable = [] #bool 2D table with discovered cases
+        if (x >= 0 and x < self.width and y >= 0 and y < self.width):
+            if not (self.viewTable[y][x]):
+                self.viewTable[y][x] == True
+                if (self.bombTable[y][x] == 0):
+                    self._discoverRecursive(x-1, y-1)
+                    self._discoverRecursive(x-1, y)
+                    self._discoverRecursive(x-1, y+1)
+                    self._discoverRecursive(x, y-1)
+                    self._discoverRecursive(x, y+1)
+                    self._discoverRecursive(x+1, y-1)
+                    self._discoverRecursive(x+1, y)
+                    self._discoverRecursive(x+1, y+1)
+                    #TODO FIX
+
+    def gameWon(self):
+        print("Congratulations, you won !")
+
+    def gameLost(self):
+        print("You loose, too bad!")
+
+    def start(self):
+
+        self._settings()
+
         self.display.output(self.bombTable, self.viewTable)
 
+        val = ""
+        while not (re.match("^[0-9]{1,2}:[0-9]{1,2}$", val)) :
+            val = self.display.input("Type in the case (X:Y) that you want to discover: ")
+        self.discover(val)
 
-    def game(self):
-        self.__settings()
-        self.__start()
+        self.display.output(self.bombTable, self.viewTable)
+
+game = Minesweeper()
+game.start()

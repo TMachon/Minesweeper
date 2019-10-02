@@ -17,7 +17,6 @@ class TerminalDisplay:
             endLine += "┴───"
         endLine += "┘"
 
-
         line = "   "
         for i in range(width):
             head = " "+str(i+1) if len(str(i+1))==1 else str(i+1)
@@ -41,8 +40,6 @@ class TerminalDisplay:
             print(line)
         
         print(endLine)
-
-
 
     def input(self, message):
         return input(message)

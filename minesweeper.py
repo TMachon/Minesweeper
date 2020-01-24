@@ -17,8 +17,8 @@ class Minesweeper:
         self.nbDiscovered = 0
 
         self.field = {} # "field" as in minefield
-        # (y, x, O): (int) bomb positions (maked as 9 or above) and case value (0-8)
-        # (y, x, 1): (bool) discovered cases (True=discovered, False=hidden)
+        # (x, y, O): (int) bomb positions (maked as 9 or above) and case value (0-8)
+        # (x, y, 1): (bool) discovered cases (True=discovered, False=hidden)
 
     def _setup(self):
 
@@ -37,28 +37,30 @@ class Minesweeper:
         elif (self.diff == 1): self.nbBombs = int(self.width*self.height/3.2)
         elif (self.diff == 2): self.nbBombs = int(self.width*self.height/2.5)
 
-        print(self.nbBombs) #DEBUG
-   
+        self._fillFieldV1()
+    
+    def _fillFieldV1(self):
+
         bombsPos = random.sample(range(self.width*self.height), self.nbBombs)
 
         print(bombsPos) #DEBUG
 
         ## Initialize tables and bombs
 
-        for i in range(self.width):
-            for j in range(self.height):
-                if ((i*self.width)+j in bombsPos):
-                    self.field[i, j, 0] = 9
+        for i in range(self.height):
+            for j in range(self.width):
+                if (j+i*self.width in bombsPos):
+                    self.field[j, i, 0] = 9
                 else:
-                    self.field[i, j, 0] = 0
-                self.field[i, j, 1] = False
+                    self.field[j, i, 0] = 0
+                self.field[j, i, 1] = False
 
-        ## Place numbers
+        self.display2.debugDisplay(self.field)
 
         # top left corner
         if (self.field[0, 0, 0] >=9):
-            self.field[0, 1, 0] += 1
             self.field[1, 0, 0] += 1
+            self.field[0, 1, 0] += 1
             self.field[1, 1, 0] += 1
 
         # top right corner
@@ -76,8 +78,8 @@ class Minesweeper:
         # bottom right corner
         if (self.field[self.width-1, self.height-1, 0] >= 9):
             self.field[self.width-2, self.height-2, 0] += 1
-            self.field[self.width-2, self.height-1, 0] += 1
             self.field[self.width-1, self.height-2, 0] += 1
+            self.field[self.width-2, self.height-1, 0] += 1
 
         # top & bottom edges
         for i in range(1, self.width-1):
@@ -123,36 +125,32 @@ class Minesweeper:
                     self.field[i+1, j-1, 0] += 1
                     self.field[i+1, j, 0] += 1
                     self.field[i+1, j+1, 0] += 1
-                    
+
+
     def discover(self, posX, posY):
 
-        if (posX >= self.width or posX < 0):
-            print("NO") #DEBUB
-        if (posY >= self.height or posY < 0):
-            print("NONO") #DEBUG
+        x = posX-1
+        y = posY-1
 
-        if (self.field[posY-1, posY, 0] == 9):
+        if (self.field[x, y, 0] >= 9):
             self.gameLost()
         else:
-            self._discoverRecursive(posX, posX)
+            self._discoverRecursive(x, y)
 
-    def _discoverRecursive(self, posX, posY):
+    def _discoverRecursive(self, x, y):
 
-        posX -= 1
-        posY -= 1
-
-        if (posX >= 0 and posX < self.width and posY >= 0 and posY < self.width):
-            self.field[posY, posX, 1] == True
-            if (self.field[posY, posX, 0] == 0):
-                self._discoverRecursive(posX-1, posY-1)
-                self._discoverRecursive(posX-1, posY)
-                self._discoverRecursive(posX-1, posY+1)
-                self._discoverRecursive(posX, posY-1)
-                self._discoverRecursive(posX, posY+1)
-                self._discoverRecursive(posX+1, posY-1)
-                self._discoverRecursive(posX+1, posY)
-                self._discoverRecursive(posX+1, posY+1)
-
+        self.field[x, y, 1] = True
+        '''
+        if (self.field[x, y, 0] == 0):
+            self._discoverRecursive(x-1, y-1)
+            self._discoverRecursive(x-1, y)
+            self._discoverRecursive(x-1, y+1)
+            self._discoverRecursive(x, y-1)
+            self._discoverRecursive(x, y+1)
+            self._discoverRecursive(x+1, y-1)
+            self._discoverRecursive(x+1, y)
+            self._discoverRecursive(x+1, y+1)
+        '''
     def gameWon(self):
         self.display2.displayVictory()
 
@@ -162,7 +160,6 @@ class Minesweeper:
     def start(self):
 
         self._setup()
-
         self.display2.debugDisplay(self.field) #Debug
                 
         ## Main game loop
@@ -170,7 +167,7 @@ class Minesweeper:
             self.display2.gameDisplay(self.field)
             row = self.display2.intInput("Select a row for your next move", 1, self.height)
             column = self.display2.intInput("Select a column for your next move", 1, self.width)
-            #self.discover(column, row)
+            self.discover(int(column), int(row))
 
 
 Minesweeper().start()

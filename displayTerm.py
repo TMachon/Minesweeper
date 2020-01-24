@@ -1,11 +1,15 @@
 # coding: utf-8
+import range_regex as rr
+import inquirer, re
+
+# Made by Theo Machon
 
 class TerminalDisplayV2:
     
     def gameDisplay(self, dictionary):
 
-        height = max(list(dictionary.keys()))[0]+1
-        width = max(list(dictionary.keys()))[1]+1
+        width = max(list(dictionary.keys()))[0]+1
+        height = max(list(dictionary.keys()))[1]+1
 
         splitLine = "  "
         for i in range(width):
@@ -31,13 +35,12 @@ class TerminalDisplayV2:
             head = " "+str(j+1) if len(str(j+1))==1 else str(j+1)
             line = head+"│"
             for i in range(width):
-                if (dictionary[j, i, 1]):
-                    val = "•" if dictionary[j, i, 0]>=9 else str(dictionary[j, i, 0])
+                if (dictionary[i, j, 1]):
+                    val = "•" if int(dictionary[i, j, 0])>=9 else str(dictionary[i, j, 0])
                 else:
                     val = "□"
 
                 line += " "+val+" │"
-                print
 
             print(line)
         
@@ -53,63 +56,39 @@ class TerminalDisplayV2:
                 print(str("{0:0=2d}".format(dictionary[j, i, 0]))+":"+str(dictionary[j, i, 1])[0]+" ", end='')
             print("")
 
-    def input(self, message):
-        return input(message)
+    def listInput(self, text, options):
 
+        query = [inquirer.List('answer',
+                message=text,
+                choices=options
+            ),]
 
-
-
-
-
-
-
-#
-# Legacy
-#
-
-class TerminalDisplay:
+        choice = inquirer.prompt(query)
+        return options.index(choice.pop('answer'))
     
-    def output(self, tableForBombs, tableForClicks):
+    def intInput(self, text, minimum, maximum):
 
-        height = len(tableForBombs)
-        width = len(tableForBombs[0])
+        regex = rr.bounded_regex_for_range(minimum, maximum)
 
-        splitLine = "  "
-        for i in range(width):
-            splitLine += "┼───"
-        splitLine += "┤"
+        query = [inquirer.Text('answer',
+            message=text,
+            validate=lambda _, x: re.match(regex, x)
+        ),]
 
-        endLine = "  "
-        for i in range(width):
-            endLine += "┴───"
-        endLine += "┘"
+        choice = inquirer.prompt(query)
+        return choice.pop('answer')
 
-        line = "   "
-        for i in range(width):
-            head = " "+str(i+1) if len(str(i+1))==1 else str(i+1)
-            line += head+"  "
-        
-        print(line)
+    def displayVictory(self):
+        print("Congratulations, you won !")
 
-        for j in range(height):
+    def displayDefeat(self):
+        print("You loose, too bad!")
 
-            print(splitLine)
+    def print(self, text):
+        print(text)
 
-            head = " "+str(j+1) if len(str(j+1))==1 else str(j+1)
-            line = head+"│"
-            for i in range(width):
-                #if (tableForClicks[j][i]):
-                if (True):
-                    val = "•" if tableForBombs[j][i]>=9 else str(tableForBombs[j][i])
-                else:
-                    val = "□"
-                #val=str(tableForClicks[j][i])[0]
-                line += " "+val+" │"
-                print
 
-            print(line)
-        
-        print(endLine)
+    # Legacy code
 
     def input(self, message):
         return input(message)

@@ -9,12 +9,13 @@ class Minesweeper:
     def __init__(self):
 
         ## Init atributes
-        self.display2 = displayTerm.TerminalDisplayV2()
-        self.diff = 0   # 0: null, 1: easy, 2: medium, 3:hard
-        self.width = 0
-        self.height = 0
-        self.nbBombs = 0
-        self.nbDiscovered = 0
+        self.io = displayTerm.TerminalDisplayV2()
+        self.diff = 0           # 0: null, 1: easy, 2: medium, 3:hard
+        self.width = 0          # width of the file
+        self.height = 0         # height of tje
+        self.amtBombs = 0       # amont of bombs in the field
+        self.amtDiscovered = 0  # amont of bombs discovered
+        self.recurStorage = []  # storage for "_discoverRecursive" function
 
         self.field = {} # "field" as in minefield
         # (x, y, O): (int) bomb positions (maked as 9 or above) and case value (0-8)
@@ -24,24 +25,24 @@ class Minesweeper:
 
         ## Set difficulty level
 
-        self.diff = int(self.display2.listInput("Select difficulty", ['Easy', 'Medium', 'Hard']))
+        self.diff = int(self.io.listInput("Select difficulty", ['Easy', 'Medium', 'Hard']))
 
         ## Set dimensions
 
-        self.width = int(self.display2.intInput("Select width (between 5 and 50)", 5, 50))
-        self.height = int(self.display2.intInput("Select height (between 5 and 50)", 5, 50))
+        self.width = int(self.io.intInput("Select width (between 5 and 50)", 5, 50))
+        self.height = int(self.io.intInput("Select height (between 5 and 50)", 5, 50))
 
         ## Generate bombs
 
-        if (self.diff == 0): self.nbBombs = int(self.width*self.height/5)
-        elif (self.diff == 1): self.nbBombs = int(self.width*self.height/3.2)
-        elif (self.diff == 2): self.nbBombs = int(self.width*self.height/2.5)
+        if (self.diff == 0): self.amtBombs = int(self.width*self.height/5)
+        elif (self.diff == 1): self.amtBombs = int(self.width*self.height/3.2)
+        elif (self.diff == 2): self.amtBombs = int(self.width*self.height/2.5)
 
         self._fillFieldV1()
     
     def _fillFieldV1(self):
 
-        bombsPos = random.sample(range(self.width*self.height), self.nbBombs)
+        bombsPos = random.sample(range(self.width*self.height), self.amtBombs)
 
         print(bombsPos) #DEBUG
 
@@ -55,7 +56,7 @@ class Minesweeper:
                     self.field[j, i, 0] = 0
                 self.field[j, i, 1] = False
 
-        self.display2.debugDisplay(self.field)
+        self.io.debugDisplay(self.field)
 
         # top left corner
         if (self.field[0, 0, 0] >=9):
@@ -136,38 +137,69 @@ class Minesweeper:
             self.gameLost()
         else:
             self._discoverRecursive(x, y)
+            self.recurStorage = []
 
     def _discoverRecursive(self, x, y):
-
         self.field[x, y, 1] = True
-        '''
+        self.recurStorage.append((x,y))
+
         if (self.field[x, y, 0] == 0):
-            self._discoverRecursive(x-1, y-1)
-            self._discoverRecursive(x-1, y)
-            self._discoverRecursive(x-1, y+1)
-            self._discoverRecursive(x, y-1)
-            self._discoverRecursive(x, y+1)
-            self._discoverRecursive(x+1, y-1)
-            self._discoverRecursive(x+1, y)
-            self._discoverRecursive(x+1, y+1)
-        '''
+
+            top = (y > 0)
+            left = (x > 0)
+            right = (x < self.width-1)
+            bottom = (y < self.height-1)
+
+            # top left
+            if (left and top and not (x-1,y-1) in self.recurStorage):
+                self._discoverRecursive(x-1, y-1)
+
+            # top
+            if (top and not (x, y-1) in self.recurStorage):
+                self._discoverRecursive(x, y-1)
+
+            # top right
+            if (right and top and not (x+1, y-1) in self.recurStorage):
+                self._discoverRecursive(x+1, y-1)
+
+            # right
+            if (right and not (x+1, y) in self.recurStorage):
+                self._discoverRecursive(x+1, y)
+
+            # bottom right
+            if (right and bottom and not (x+1, y+1) in self.recurStorage):
+                self._discoverRecursive(x+1, y+1)
+
+            # bottom
+            if (bottom and not (x, y+1) in self.recurStorage):
+                self._discoverRecursive(x, y+1)
+
+            # bottom left
+            if (left and bottom and not (x-1, y+1) in self.recurStorage):
+                self._discoverRecursive(x-1, y+1)
+            
+            # left
+            if (left and not (x-1, y) in self.recurStorage):
+                self._discoverRecursive(x-1, y)
+
     def gameWon(self):
-        self.display2.displayVictory()
+        self.io.displayVictory()
+        quit()
 
     def gameLost(self):
-        self.display2.displayDefeat()
+        self.io.displayDefeat()
+        quit()
 
     def start(self):
 
         self._setup()
-        self.display2.debugDisplay(self.field) #Debug
+        self.io.debugDisplay(self.field) #DEBUG
                 
         ## Main game loop
         while True :
-            self.display2.gameDisplay(self.field)
-            row = self.display2.intInput("Select a row for your next move", 1, self.height)
-            column = self.display2.intInput("Select a column for your next move", 1, self.width)
-            self.discover(int(column), int(row))
+            self.io.gameDisplay(self.field)
+            (x,y) = self.io.getCoordinates(self.height, self.width)
+            self.discover(x, y)
 
 
 Minesweeper().start()

@@ -9,34 +9,45 @@ class Minesweeper:
     def __init__(self):
 
         ## Init atributes
-        self.io = displayTerm.TerminalDisplayV2()
-        self.diff = 0           # 0: null, 1: easy, 2: medium, 3:hard
-        self.width = 0          # width of the file
-        self.height = 0         # height of tje
-        self.amtBombs = 0       # amont of bombs in the field
-        self.amtDiscovered = 0  # amont of bombs discovered
-        self.recurStorage = []  # storage for "_discoverRecursive" function
 
-        self.field = {} # "field" as in minefield
-        # (x, y, O): (int) bomb positions (maked as 9 or above) and case value (0-8)
-        # (x, y, 1): (bool) discovered cases (True=discovered, False=hidden)
+        self.io = displayTerm.TerminalDisplayV2()
+
+        self.recurStorage = []  # List: storage for "_discoverRecursive" function
+        self.debug = False       # Bool: enable debug display
+
+        self.diff = 0           # Int:  0:Novice, 1:Easy, 2:Medium, 3:Hard, 4:Impossible
+        self.width = 0          # Int:  width of the file
+        self.height = 0         # Int:  height of tje
+        self.amtBombs = 0       # Int:  amont of bombs in the field
+        self.running = True     # Bool: True while a game is running
+        self.playing = True     # Bool: True while the player has not decided to stop playing
+
+        self.amtDiscovered = 0  # Int:  amont of bombs discovered
+        self.field = {}         # Dict: "field" as in minefield
+            # (x, y, O): (int) bomb positions (maked as 9 or above) and case value (0-8)
+            # (x, y, 1): (bool) discovered cases (True=discovered, False=hidden)
 
     def _setup(self):
 
+        self.field = {}
+        self.amtDiscovered = 0
+
         ## Set difficulty level
 
-        self.diff = int(self.io.listInput("Select difficulty", ['Easy', 'Medium', 'Hard']))
+        self.diff = int(self.io.inputList("Select difficulty", ['Novice', 'Easy', 'Medium', 'Hard', 'Impossible']))
 
         ## Set dimensions
 
-        self.width = int(self.io.intInput("Select width (between 5 and 50)", 5, 50))
-        self.height = int(self.io.intInput("Select height (between 5 and 50)", 5, 50))
+        self.width = int(self.io.inputInt("Select width (between 5 and 50)", 5, 50))
+        self.height = int(self.io.inputInt("Select height (between 5 and 50)", 5, 50))
 
         ## Generate bombs
 
-        if (self.diff == 0): self.amtBombs = int(self.width*self.height/5)
-        elif (self.diff == 1): self.amtBombs = int(self.width*self.height/3.2)
-        elif (self.diff == 2): self.amtBombs = int(self.width*self.height/2.5)
+        if (self.diff == 0): self.amtBombs = int(self.width*self.height/6)
+        elif (self.diff == 1): self.amtBombs = int(self.width*self.height/5)
+        elif (self.diff == 2): self.amtBombs = int(self.width*self.height/3.2)
+        elif (self.diff == 3): self.amtBombs = int(self.width*self.height/2.5)
+        elif (self.diff == 4): self.amtBombs = int(self.width*self.height/2)
 
         self._fillFieldV1()
     
@@ -44,7 +55,7 @@ class Minesweeper:
 
         bombsPos = random.sample(range(self.width*self.height), self.amtBombs)
 
-        print(bombsPos) #DEBUG
+        if (self.debug): print(bombsPos) #DEBUG
 
         ## Initialize tables and bombs
 
@@ -56,7 +67,7 @@ class Minesweeper:
                     self.field[j, i, 0] = 0
                 self.field[j, i, 1] = False
 
-        self.io.debugDisplay(self.field)
+        if (self.debug): self.io.displayDebug(self.field) #DEBUG
 
         # top left corner
         if (self.field[0, 0, 0] >=9):
@@ -127,19 +138,25 @@ class Minesweeper:
                     self.field[i+1, j, 0] += 1
                     self.field[i+1, j+1, 0] += 1
 
-
     def discover(self, posX, posY):
 
         x = posX-1
         y = posY-1
 
-        if (self.field[x, y, 0] >= 9):
-            self.gameLost()
+        if (self.field[x, y, 1]):
+            self.io.displayWarning("You chose an already defused spot, choose another one.")
         else:
-            self._discoverRecursive(x, y)
-            self.recurStorage = []
+            if (self.field[x, y, 0] >= 9):
+                self.gameLost()
+            else:
+                self._discoverRecursive(x, y)
+                self.recurStorage = []
+                if ((self.amtBombs + self.amtDiscovered) >= (self.height * self.width)):
+                    self.gameWon()
 
     def _discoverRecursive(self, x, y):
+
+        self.amtDiscovered += 1
         self.field[x, y, 1] = True
         self.recurStorage.append((x,y))
 
@@ -183,23 +200,31 @@ class Minesweeper:
                 self._discoverRecursive(x-1, y)
 
     def gameWon(self):
+        self.io.displayGame(self.field)
         self.io.displayVictory()
-        quit()
+        self.running = False
 
     def gameLost(self):
         self.io.displayDefeat()
-        quit()
+        self.running = False
 
     def start(self):
 
-        self._setup()
-        self.io.debugDisplay(self.field) #DEBUG
+        while (self.playing):
+
+            self.running = True
+            self._setup()
+
+            if (self.debug): self.io.displayDebug(self.field) #DEBUG
+
+            ## Main game loop
+            while (self.running) :
+                self.io.displayGame(self.field)
+                (x,y) = self.io.getCoordinates(self.height, self.width)
+                self.discover(x, y)
+            
+            self.playing = self.io.inputList("Do you want to play again ?", ["Yes", "No"]) == 0
+
+        self.io.displayMessage("Thanks for playing, see you soon.")
                 
-        ## Main game loop
-        while True :
-            self.io.gameDisplay(self.field)
-            (x,y) = self.io.getCoordinates(self.height, self.width)
-            self.discover(x, y)
-
-
 Minesweeper().start()

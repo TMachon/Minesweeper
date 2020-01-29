@@ -25,7 +25,7 @@ class TerminalDisplayV2:
     
     def inputInt(self, text, minimum, maximum):
 
-        regex = rr.bounded_regex_for_range(minimum, maximum)
+        regex = "^"+rr.bounded_regex_for_range(minimum, maximum)+"(?!\.)*$"
 
         query = [inquirer.Text('answer',
             message=text,

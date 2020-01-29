@@ -37,7 +37,7 @@ class Minesweeper:
         self.diff = int(self.io.inputList("Select difficulty", ['Novice', 'Easy', 'Medium', 'Hard', 'Impossible']))
 
         ## Set dimensions
-
+        
         self.width = int(self.io.inputInt("Select width (between 5 and 50)", 5, 50))
         self.height = int(self.io.inputInt("Select height (between 5 and 50)", 5, 50))
 
